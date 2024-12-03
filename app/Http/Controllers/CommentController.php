@@ -11,28 +11,29 @@ use Illuminate\Support\Str;
 
 class CommentController extends Controller
 {
-    public function getComments(Request $request){
-    try {
-        $data = DB::table('comments AS c')
-            ->select('c.id', 'c.comment', 'c.created_at', 'users.name as username')
-            ->where('c.post_id','=', $request->post_id)
-            ->join('users', 'c.user_id', '=', 'users.id')
-            ->orderBy('c.created_at', 'desc')
-            ->paginate(
-                $request->size ?? 10, 
-                ['c.id', 'c.comment', 'c.created_at', 'users.name'], // Columns to select
-                'page', 
-                $request->page ?? 1 // Current page
-            );
+    public function getComments(Request $request)
+    {
+        try {
+            $data = DB::table('comments AS c')
+                ->select('c.id', 'c.comment', 'c.created_at', 'users.name as username')
+                ->where('c.post_id', '=', $request->post_id)
+                ->join('users', 'c.user_id', '=', 'users.id')
+                ->orderBy('c.created_at', 'desc')
+                ->paginate(
+                    $request->size ?? 10,
+                    ['c.id', 'c.comment', 'c.created_at', 'users.name'], // Columns to select
+                    'page',
+                    $request->page ?? 1 // Current page
+                );
 
-        return response()->json(['status' => 1, 'message' => 'get', 'data' => $data], 200);
-    } catch (\Exception $e) {
-        return response()->json(['status' => 0, 'message' => $e->getMessage()], 500);
-    }
+            return response()->json(['status' => 1, 'message' => 'get', 'data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 0, 'message' => $e->getMessage()], 500);
+        }
     }
     public function addComment(Request $request)
     {
-        
+
         DB::beginTransaction();
         try {
 
@@ -50,7 +51,7 @@ class CommentController extends Controller
             return response()->json(['status' => 0, 'message' => 'Failed to post'], 500);
         }
     }
-    
+
     public function deleteComment($id)
     {
 
@@ -69,6 +70,4 @@ class CommentController extends Controller
             return response()->json(['status' => 0, 'message' => 'Failed to post'], 500);
         }
     }
-
-    
 }

@@ -27,12 +27,26 @@ class PostController extends Controller
                 DB::raw('(SELECT JSON_ARRAYAGG(users.name) FROM likes 
                       JOIN users ON likes.user_id = users.id 
                       WHERE likes.post_id = posts.id) as liked_by'),
-                DB::raw('(SELECT JSON_ARRAYAGG(JSON_OBJECT("id", comments.id, "user_id", comments.user_id, "content", comments.comment, "created_at", comments.created_at, "user_name", comment_users.name)) 
-                      FROM comments 
-                      JOIN users as comment_users ON comments.user_id = comment_users.id 
-                      WHERE comments.post_id = posts.id 
-                      ORDER BY comments.created_at DESC 
-                      LIMIT 2) as recent_comments')
+                DB::raw('(
+                        SELECT JSON_ARRAYAGG(
+                            JSON_OBJECT(
+                                "id", recent_comments.id, 
+                                "user_id", recent_comments.user_id, 
+                                "content", recent_comments.comment, 
+                                "created_at", recent_comments.created_at, 
+                                "user_name", comment_users.name
+                            )
+                        )
+                        FROM (
+                            SELECT comments.id, comments.user_id, comments.comment, comments.created_at
+                            FROM comments
+                            WHERE comments.post_id = posts.id
+                            ORDER BY comments.created_at DESC
+                            LIMIT 2
+                        ) as recent_comments
+                        JOIN users as comment_users ON recent_comments.user_id = comment_users.id
+                    ) as recent_comments')
+
             )
             ->join('users', 'posts.user_id', '=', 'users.id');
 
@@ -117,5 +131,4 @@ class PostController extends Controller
         );
         return response()->json(['status' => 1, 'message' => 'get', 'data' => $data], 200);
     }
-
 }
