@@ -80,67 +80,7 @@ class AuthController extends Controller
     
 
     
-    public function updateUser(Request $request,$id)
-    {
-
-        $validate = Validator::make(request()->all(), [
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'username'=>'required|unique:users,username,'.$id,
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
-    
-        if ($validate->fails()) {
-            return response()->json($validate->messages(), 400);
-        }
-    
-        DB::beginTransaction();
-    
-        try {
-            $user = DB::table('users')->where('id', $id)->first();
-        
-            if (!$user) {
-                DB::rollBack();
-                return response()->json(['message' => 'User not found'], 404);
-            }
-    
-            $data = [
-                'name' => request('name'),
-                'email' => request('email'),
-                'updated_at'=>now()
-            ];
-            
-            if ($request->hasFile('profile_picture')) {
-                $profile_picture = $request->file('profile_picture')->store('profile_pictures','public');
-                $file_name = basename($profile_picture);
-                $data['profile_picture'] = $file_name;
-                $data['profile_picture_path'] =  url('storage/profile_pictures/' . $file_name);
-
-            }
-            if (request('bio')){
-                $data['bio'] = $request->bio;
-            }
-
-            if (request('password')) {
-                $data['password'] = Hash::make(request('password'));
-            }
-            if (request('username')) {
-                $data['username'] = $request->username;
-            }
-            
-            $updated = DB::table('users')
-                ->where('id', $id)
-                ->update($data);
-    
-            if ($updated) {
-                DB::commit(); 
-                return response()->json(['message' => 'User updated successfully']);
-            } 
-        } catch (\Exception $e) {
-            DB::rollBack(); 
-            return response()->json(['message' => 'Failed to update user', 'error' => $e->getMessage()], 500);
-        }
-    }
+  
     
 //     public function deleteUser($id){
 //         $user = User::find($id);
